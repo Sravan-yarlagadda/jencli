@@ -7,5 +7,5 @@
 ### Usage : 
 
 #### Start and monitor job
-jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m 
+ ```jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m```
     
