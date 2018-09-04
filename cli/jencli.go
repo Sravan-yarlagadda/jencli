@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -63,14 +64,14 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 		fmt.Println("Body read error : ", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Response : %s \n", body)
+	// fmt.Printf("Response : %s \n", body)
 	var useCrumbsVal = useCrumbsStruct
 	decErr := json.Unmarshal(body, &useCrumbsVal)
 	if decErr != nil {
 		fmt.Println("Decode error : ", decErr)
 		os.Exit(1)
 	}
-	fmt.Printf("class : %s\nuseCrumbs : %t\n", useCrumbsVal.Class, useCrumbsVal.UseCrumbs)
+	// fmt.Printf("class : %s\nuseCrumbs : %t\n", useCrumbsVal.Class, useCrumbsVal.UseCrumbs)
 	// using crumbs. Populate crumb values in struct
 	if useCrumbsVal.UseCrumbs == true {
 		getCrumbReq, getCrumbReqErr := http.NewRequest("GET", jenURL+"/crumbIssuer/api/json", nil)
@@ -119,22 +120,56 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 	}
 	log.Printf("Job %s Queued..\n", url)
 
-	if monitor == true {
-		isBuildStarted := false
-		for isBuildStarted == false {
-			newNextBuildNum := cli.getNextBuildNumber(url)
-			if newNextBuildNum > nextBuildNum {
-				isBuildStarted = true
-			}
-			time.Sleep(10 * time.Second)
+	isBuildStarted := false
+	for isBuildStarted == false {
+		newNextBuildNum := cli.getNextBuildNumber(url)
+		if newNextBuildNum > nextBuildNum {
+			isBuildStarted = true
 		}
-		log.Printf("Build #%v Started for job %s\n", nextBuildNum, url)
+		time.Sleep(10 * time.Second)
+	}
+	log.Printf("Build #%v Started for job %s\n", nextBuildNum, url)
+	if monitor == true {
+		cli.monitorBuild(url, nextBuildNum)
 	}
 
 }
 
 func (cli *Jencli) monitorBuild(url string, buildNumber int) {
-
+	log.Printf("Monitoring build %v for job %v\n", buildNumber, url)
+	fmt.Println("\t***************************************************")
+	// http://192.168.99.100:8080/job/test/14/logText/progressiveText?start=0
+	fmt.Printf("\tbuild log : %s\n", url+"/"+strconv.Itoa(buildNumber))
+	fmt.Println("\t***************************************************")
+	pos := 0
+	hasMoreData := true
+	for hasMoreData == true {
+		time.Sleep(5 * time.Second)
+		// fmt.Println(url + "/" + strconv.Itoa(buildNumber) + "/logText/progressiveText?start=" + strconv.Itoa(pos))
+		req, err := http.NewRequest("GET", url+"/"+strconv.Itoa(buildNumber)+"/logText/progressiveText?start="+strconv.Itoa(pos), nil)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		req.SetBasicAuth(cli.User, cli.Token)
+		if cli.Crumb.UsesCrumb == true {
+			req.Header.Set(cli.Crumb.CrumbString, cli.Crumb.CrumbValue)
+		}
+		res, resErr := client.Do(req)
+		if resErr != nil {
+			log.Fatalln(resErr)
+		}
+		if res.StatusCode != 200 {
+			log.Fatalln("Error tailing log : ", res.StatusCode)
+		}
+		defer res.Body.Close()
+		body, readErr := ioutil.ReadAll(res.Body)
+		if readErr != nil {
+			log.Fatalln(readErr)
+		}
+		fmt.Printf("%s", body)
+		hasMoreData, _ = strconv.ParseBool(res.Header.Get("X-More-Data"))
+		pos, _ = strconv.Atoi(res.Header.Get("X-Text-Size"))
+	}
 }
 
 func (cli *Jencli) getNextBuildNumber(url string) int {
