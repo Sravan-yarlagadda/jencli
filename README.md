@@ -7,5 +7,5 @@
 ### Usage : 
 
 #### Start and monitor job
-jencli start -u <jenkins_job_url> -p <parameters_json> -m 
+jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m 
     

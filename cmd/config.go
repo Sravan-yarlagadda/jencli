@@ -15,12 +15,10 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-var user, token string
+//var user, token string
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
@@ -30,8 +28,8 @@ var configCmd = &cobra.Command{
 
 	config -u <username> -t <token>`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("User : ", user)
-		fmt.Println("token : ", token)
+		//fmt.Println("User : ", user)
+		//fmt.Println("token : ", token)
 	},
 }
 
@@ -47,6 +45,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	configCmd.Flags().StringVarP(&user, "user", "u", " ", "username for login")
-	configCmd.Flags().StringVarP(&token, "token", "t", " ", "User token for login")
+	//configCmd.Flags().StringVarP(&user, "user", "u", " ", "username for login")
+	//configCmd.Flags().StringVarP(&token, "token", "t", " ", "User token for login")
 }

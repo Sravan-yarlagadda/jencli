@@ -23,7 +23,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var url string
+var (
+	url, token, user string
+)
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
@@ -38,15 +40,19 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("start called")
 
-		jencli := cli.Jencli{
-			//Crumb: {UsesCrumb: false, CrumbString: "", CrumbValue: ""},
-			User:  "admin",
-			Token: "11fe33897ccc15106adca3d8110e939340",
-		}
-		if len(url) != 1 {
-			jencli.Start(url)
+		// jencli := cli.Jencli{
+		//Crumb: {UsesCrumb: false, CrumbString: "", CrumbValue: ""},
+		// User:  "admin",
+		// Token: "11fe33897ccc15106adca3d8110e939340",
+		// }
+		if len(url) != 1 && len(user) != 1 && len(token) != 1 {
+			jencli := cli.Jencli{
+				User:  user,
+				Token: token,
+			}
+			jencli.Start(url, "", true)
 		} else {
-			fmt.Println("Usage : jencli start --url <job_url>")
+			fmt.Println("Usage : jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m")
 			os.Exit(1)
 		}
 
@@ -66,5 +72,8 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	startCmd.Flags().StringVarP(&url, "url", "u", " ", "URL to start the job")
+	startCmd.Flags().StringVarP(&url, "url", "l", " ", "URL to start the job")
+	startCmd.Flags().BoolP("monitor", "m", false, "Monitor job")
+	startCmd.Flags().StringVarP(&user, "user", "u", " ", "user")
+	startCmd.Flags().StringVarP(&token, "token", "t", " ", "token")
 }

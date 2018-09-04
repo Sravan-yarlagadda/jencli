@@ -90,7 +90,7 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 		}
 		defer getCrumbResp.Body.Close()
 		getCrumbRespBody, _ := ioutil.ReadAll(getCrumbResp.Body)
-		fmt.Printf("getCrumbResp Body : %s\n", getCrumbRespBody)
+		// fmt.Printf("getCrumbResp Body : %s\n", getCrumbRespBody)
 		crumbDecErr := json.Unmarshal(getCrumbRespBody, &cli.Crumb)
 		if crumbDecErr != nil {
 			fmt.Println(crumbDecErr)
@@ -125,11 +125,15 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 			newNextBuildNum := cli.getNextBuildNumber(url)
 			if newNextBuildNum > nextBuildNum {
 				isBuildStarted = true
-				time.Sleep(20 * time.Second)
 			}
+			time.Sleep(10 * time.Second)
 		}
-
+		log.Printf("Build #%v Started for job %s\n", nextBuildNum, url)
 	}
+
+}
+
+func (cli *Jencli) monitorBuild(url string, buildNumber int) {
 
 }
 
@@ -152,6 +156,6 @@ func (cli *Jencli) getNextBuildNumber(url string) int {
 	body, _ := ioutil.ReadAll(res.Body)
 	var nextBuild = nextBuildNumber{}
 	json.Unmarshal(body, &nextBuild)
-	fmt.Println(nextBuild.NextBuildNumber)
+	//fmt.Println(nextBuild.NextBuildNumber)
 	return nextBuild.NextBuildNumber
 }
