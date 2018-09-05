@@ -28,7 +28,7 @@ Flags:
 Use "jencli [command] --help" for more information about a command
 ```
 
-#### Start 
+#### Start command
 ```
 λ jencli.exe start --help
 A longer description that spans multiple lines and likely contains examples
