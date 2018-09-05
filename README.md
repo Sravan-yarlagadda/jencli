@@ -1,3 +1,6 @@
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/Sravan-yarlagadda/jencli)](https://goreportcard.com/report/github.com/Sravan-yarlagadda/jencli)
+
 # jencli - Jenkins Client 
 
 ### Jenkins client written in golang. This is capable of following tasks.
