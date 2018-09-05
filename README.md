@@ -4,11 +4,26 @@
 
 - start and monitor jobs
 
+
 ### Usage : 
 
-#### Start and monitor job
- ```jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m```
+``` jencli.exe --help
+Jenkins commmand line interface. this can be used to perform following actions
+        - Start Jenkins job and display the log.
 
-#### Sample output
- ![alt text](https://github.com/Sravan-yarlagadda/jencli/blob/master/images/output.PNG)
-    
+Usage:
+  jencli [command]
+
+Available Commands:
+  config      Configure username and token
+  help        Help about any command
+  start       Start a jenkins job
+
+Flags:
+      --config string   config file (default is $HOME/.jencli.yaml)
+  -h, --help            help for jencli
+  -t, --toggle          Help message for toggle
+
+Use "jencli [command] --help" for more information about a command ```
+
+
