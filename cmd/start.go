@@ -25,6 +25,7 @@ import (
 
 var (
 	url, token, user string
+	monitor          bool
 )
 
 // startCmd represents the start command
@@ -50,7 +51,11 @@ to quickly create a Cobra application.`,
 				User:  user,
 				Token: token,
 			}
-			jencli.Start(url, "", true)
+			if monitor == true {
+				jencli.Start(url, "", true)
+			} else {
+				jencli.Start(url, "", false)
+			}
 		} else {
 			fmt.Println("Usage : jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m")
 			os.Exit(1)
@@ -73,7 +78,7 @@ func init() {
 	// is called directly, e.g.:
 	// startCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	startCmd.Flags().StringVarP(&url, "url", "l", " ", "URL to start the job")
-	startCmd.Flags().BoolP("monitor", "m", false, "Monitor job")
+	startCmd.Flags().BoolVarP(&monitor, "monitor", "m", false, "Monitor job")
 	startCmd.Flags().StringVarP(&user, "user", "u", " ", "user")
 	startCmd.Flags().StringVarP(&token, "token", "t", " ", "token")
 }
