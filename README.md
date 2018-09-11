@@ -1,12 +1,11 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Sravan-yarlagadda/jencli)](https://goreportcard.com/report/github.com/Sravan-yarlagadda/jencli)
 
-# jencli - Jenkins Client 
+# jencli - Jenkins CLI tool to start and monitor build
 
-### Jenkins client written in golang. This is capable of following tasks.
+### A Simple command line tool to start and monitor build on Jenkins.
 
-- start and monitor jobs
-
+- with this cli tool you can start the jenkins build and tail the log. 
 
 ### Usage : 
 

@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	url, token, user string
-	monitor          bool
+	url, token, user, params string
+	monitor                  bool
 )
 
 // startCmd represents the start command
@@ -45,6 +45,7 @@ to quickly create a Cobra application.`,
 		//Crumb: {UsesCrumb: false, CrumbString: "", CrumbValue: ""},
 		// User:  "admin",
 		// Token: "11fe33897ccc15106adca3d8110e939340",
+		// 205ea7eaefdcdaf8a8974dd290fa01d9 - Token jenkins mac
 		// }
 		if len(url) != 1 && len(user) != 1 && len(token) != 1 {
 			jencli := cli.Jencli{
@@ -52,9 +53,9 @@ to quickly create a Cobra application.`,
 				Token: token,
 			}
 			if monitor == true {
-				jencli.Start(url, "", true)
+				jencli.Start(url, params, true)
 			} else {
-				jencli.Start(url, "", false)
+				jencli.Start(url, params, false)
 			}
 		} else {
 			fmt.Println("Usage : jencli start -l <job_url> -u <user> -t <token> -p <parameters> -m")
@@ -81,4 +82,5 @@ func init() {
 	startCmd.Flags().BoolVarP(&monitor, "monitor", "m", false, "Monitor job")
 	startCmd.Flags().StringVarP(&user, "user", "u", " ", "user")
 	startCmd.Flags().StringVarP(&token, "token", "t", " ", "token")
+	startCmd.Flags().StringVarP(&params, "params", "p", " ", "parameters to be passed to jenkins job")
 }

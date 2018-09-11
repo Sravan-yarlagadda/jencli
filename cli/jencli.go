@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -37,9 +38,13 @@ var useCrumbsStruct struct {
 }
 
 // Start Jenkins job with the given URL
-func (cli *Jencli) Start(url string, parameters string, monitor bool) {
-	fmt.Println("Start Jenkins job for the given url : ", url)
-	jenURLSplit := strings.Split(url, "/")
+//func (cli *Jencli) Start ( url string, parameters string, monitor bool)
+//parameters : 	l - url to start the job
+//				parameters - parameters JSON format to be passed to jenkins job
+//				monitor - boolean value to specify to monitor the build
+func (cli *Jencli) Start(l string, parameters string, monitor bool) {
+	fmt.Println("Start Jenkins job for the given url : ", l)
+	jenURLSplit := strings.Split(l, "/")
 	jenURL := jenURLSplit[0] + "//" + jenURLSplit[2]
 	req, cerr := http.NewRequest("GET", jenURL+"/api/json?tree=useCrumbs", nil)
 	if cerr != nil {
@@ -57,22 +62,18 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 		fmt.Printf("Not Authorized : Error code %d\n", resp.StatusCode)
 		os.Exit(1)
 	}
-	// http://192.168.99.100:8080/api/json?pretty=true&tree=useCrumbs
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Body read error : ", err)
 		os.Exit(1)
 	}
-	// fmt.Printf("Response : %s \n", body)
 	var useCrumbsVal = useCrumbsStruct
 	decErr := json.Unmarshal(body, &useCrumbsVal)
 	if decErr != nil {
 		fmt.Println("Decode error : ", decErr)
 		os.Exit(1)
 	}
-	// fmt.Printf("class : %s\nuseCrumbs : %t\n", useCrumbsVal.Class, useCrumbsVal.UseCrumbs)
-	// using crumbs. Populate crumb values in struct
 	if useCrumbsVal.UseCrumbs == true {
 		getCrumbReq, getCrumbReqErr := http.NewRequest("GET", jenURL+"/crumbIssuer/api/json", nil)
 		if getCrumbReqErr != nil {
@@ -91,7 +92,6 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 		}
 		defer getCrumbResp.Body.Close()
 		getCrumbRespBody, _ := ioutil.ReadAll(getCrumbResp.Body)
-		// fmt.Printf("getCrumbResp Body : %s\n", getCrumbRespBody)
 		crumbDecErr := json.Unmarshal(getCrumbRespBody, &cli.Crumb)
 		if crumbDecErr != nil {
 			fmt.Println(crumbDecErr)
@@ -99,38 +99,50 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 		}
 		cli.Crumb.UsesCrumb = true
 	}
-
-	startJobReq, startJobReqErr := http.NewRequest("POST", url+"/build", nil)
+	var startJobReq *http.Request
+	var startJobReqErr error
+	if strings.TrimSpace(parameters) != "" {
+		form := url.Values{}
+		form.Add("json", parameters)
+		startJobReq, startJobReqErr = http.NewRequest("POST", l+"/build", strings.NewReader(form.Encode()))
+		startJobReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		startJobReq, startJobReqErr = http.NewRequest("POST", l+"/build", nil)
+	}
 	startJobReq.SetBasicAuth(cli.User, cli.Token)
 	if startJobReqErr != nil {
 		log.Fatalln(startJobReqErr)
 	}
 	if cli.Crumb.UsesCrumb == true {
-		// fmt.Printf("setting curmb header : %s : %s\n", cli.Crumb.CrumbString, cli.Crumb.CrumbValue)
 		startJobReq.Header.Set(cli.Crumb.CrumbString, cli.Crumb.CrumbValue)
 
 	}
-	nextBuildNum := cli.getNextBuildNumber(url)
+	nextBuildNum := cli.getNextBuildNumber(l)
+
+	fmt.Printf("Request to start job : %v\n", startJobReq.Form)
 	startJobResp, startJobRespErr := client.Do(startJobReq)
 	if startJobRespErr != nil {
 		log.Fatalln(startJobRespErr)
 	}
 	if startJobResp.StatusCode != 201 {
+		body, _ := ioutil.ReadAll(startJobResp.Body)
+		log.Printf("Body : \n %s \n", body)
 		log.Fatalln("Unable to start Job. Got status code : ", startJobResp.StatusCode)
+
 	}
-	log.Printf("Job %s Queued..\n", url)
+	log.Printf("Job %s Queued..\n", l)
 
 	isBuildStarted := false
 	for isBuildStarted == false {
-		newNextBuildNum := cli.getNextBuildNumber(url)
+		newNextBuildNum := cli.getNextBuildNumber(l)
 		if newNextBuildNum > nextBuildNum {
 			isBuildStarted = true
 		}
 		time.Sleep(10 * time.Second)
 	}
-	log.Printf("Build #%v Started for job %s\n", nextBuildNum, url)
+	log.Printf("Build #%v Started for job %s\n", nextBuildNum, l)
 	if monitor == true {
-		cli.monitorBuild(url, nextBuildNum)
+		cli.monitorBuild(l, nextBuildNum)
 	}
 
 }
@@ -138,14 +150,12 @@ func (cli *Jencli) Start(url string, parameters string, monitor bool) {
 func (cli *Jencli) monitorBuild(url string, buildNumber int) {
 	log.Printf("Monitoring build %v for job %v\n", buildNumber, url)
 	fmt.Println("\t***************************************************")
-	// http://192.168.99.100:8080/job/test/14/logText/progressiveText?start=0
 	fmt.Printf("\tbuild log : %s\n", url+"/"+strconv.Itoa(buildNumber))
 	fmt.Println("\t***************************************************")
 	pos := 0
 	hasMoreData := true
 	for hasMoreData == true {
 		time.Sleep(5 * time.Second)
-		// fmt.Println(url + "/" + strconv.Itoa(buildNumber) + "/logText/progressiveText?start=" + strconv.Itoa(pos))
 		req, err := http.NewRequest("GET", url+"/"+strconv.Itoa(buildNumber)+"/logText/progressiveText?start="+strconv.Itoa(pos), nil)
 		if err != nil {
 			log.Fatalln(err)
@@ -191,6 +201,5 @@ func (cli *Jencli) getNextBuildNumber(url string) int {
 	body, _ := ioutil.ReadAll(res.Body)
 	var nextBuild = nextBuildNumber{}
 	json.Unmarshal(body, &nextBuild)
-	//fmt.Println(nextBuild.NextBuildNumber)
 	return nextBuild.NextBuildNumber
 }

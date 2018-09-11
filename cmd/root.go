@@ -29,7 +29,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "jencli",
 	Short: "Jenkins command line interface",
-	Long: `Jenkins commmand line interface. this can be used to perform following actions
+	Long: `Jenkins command line interface. this can be used to perform following actions
 	- Start Jenkins job and display the log.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
